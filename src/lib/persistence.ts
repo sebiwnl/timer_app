@@ -3,7 +3,7 @@ import type { SavedConfig, WorkoutConfig } from './types';
 const STORAGE_KEY = 'workout_timer_configs';
 const MAX_SAVED = 5;
 
-export function saveConfig(name: string, config: WorkoutConfig): void {
+export function saveConfig(name: string, config: WorkoutConfig): SavedConfig[] {
 	const configs = loadConfigs();
 	
 	const newConfig: SavedConfig = {
@@ -15,10 +15,10 @@ export function saveConfig(name: string, config: WorkoutConfig): void {
 
 	configs.unshift(newConfig);
 	
-	// Keep only the latest MAX_SAVED configs
 	const trimmed = configs.slice(0, MAX_SAVED);
 	
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+	return trimmed;
 }
 
 export function loadConfigs(): SavedConfig[] {
@@ -30,15 +30,17 @@ export function loadConfigs(): SavedConfig[] {
 		
 		const parsed = JSON.parse(stored);
 		return Array.isArray(parsed) ? parsed : [];
-	} catch {
+	} catch (error) {
+		console.error('[Persistence] Failed to load configs:', error);
 		return [];
 	}
 }
 
-export function deleteConfig(id: string): void {
+export function deleteConfig(id: string): SavedConfig[] {
 	const configs = loadConfigs();
 	const filtered = configs.filter(c => c.id !== id);
 	localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+	return filtered;
 }
 
 export function loadConfigById(id: string): WorkoutConfig | null {

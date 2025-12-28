@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { WorkoutConfig, RoundGroup } from "./types";
 	import { appState } from "./state.svelte";
+	import { formatDuration } from "./utils";
 	import PlusIcon from "@lucide/svelte/icons/plus";
 	import PlayIcon from "@lucide/svelte/icons/play";
 	import XIcon from "@lucide/svelte/icons/x";
@@ -58,7 +59,9 @@
 
 	function handleInput(id: string, field: keyof RoundGroup, e: Event) {
 		const target = e.target as HTMLInputElement;
-		updateGroup(id, field, parseInt(target.value));
+		const value = parseInt(target.value, 10);
+		if (isNaN(value) || value < 0) return;
+		updateGroup(id, field, value);
 	}
 
 	function removeGroup(id: string) {
@@ -74,21 +77,10 @@
 		configName = "";
 	}
 
-	function formatDuration(seconds: number): string {
-		const mins = Math.floor(seconds / 60);
-		const secs = seconds % 60;
-		if (mins > 0) {
-			return `${mins}m ${secs}s`;
-		}
-		return `${secs}s`;
-	}
-
 	function getTotalWorkoutDuration(): number {
 		return config.groups.reduce((total, group) => {
-			const groupDuration =
-				group.rounds *
-				(group.workSeconds +
-					(group.rounds > 1 ? group.pauseSeconds : 0));
+			const groupDuration = group.rounds * group.workSeconds +
+				(group.rounds - 1) * group.pauseSeconds;
 			return total + groupDuration;
 		}, 0);
 	}

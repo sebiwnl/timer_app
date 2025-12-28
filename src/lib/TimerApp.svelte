@@ -87,15 +87,7 @@
     // Update engine settings when global settings change
     $effect(() => {
         if (timerEngine) {
-            if (typeof (timerEngine as any).updateSettings === "function") {
-                (timerEngine as any).updateSettings(
-                    $state.snapshot(appState.settings),
-                );
-            } else {
-                (timerEngine as any).settings = $state.snapshot(
-                    appState.settings,
-                );
-            }
+            timerEngine.updateSettings($state.snapshot(appState.settings));
         }
     });
 

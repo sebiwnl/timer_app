@@ -3,6 +3,8 @@ import { audio } from './audio';
 import { voice } from './VoiceNotification.svelte';
 
 const COUNTDOWN_DURATION = 5;
+const WARNING_SECONDS = 5;
+const RAF_UPDATE_INTERVAL = 1000 / 60;
 
 interface TimelineItem {
 	type: 'countdown' | 'work' | 'pause';
@@ -20,6 +22,7 @@ interface TimerEngine {
 	resume: () => void;
 	reset: () => void;
 	cleanup: () => void;
+	updateSettings: (settings: AudioSettings) => void;
 }
 
 function buildTimeline(cfg: WorkoutConfig): TimelineItem[] {
@@ -50,13 +53,13 @@ export function createTimerEngine(cfg: WorkoutConfig, settings: AudioSettings): 
 	});
 
 	let timeline = buildTimeline(cfg);
-	let idx = 0; // current index into timeline
+	let idx = 0;
 	let lastTime = 0;
 	let raf: number | null = null;
 	let warnedForCurrent = false;
 	let pausedPrevStatus: TimerState['status'] = 'idle';
-	// settingsRef is used inside the engine so runtime updates from the UI work
 	let settingsRef: AudioSettings = settings;
+	let hiddenTimestamp: number | null = null;
 
 	function setStateFromItem(item: TimelineItem) {
 		state.currentGroupIndex = item.groupIndex;
@@ -74,26 +77,22 @@ export function createTimerEngine(cfg: WorkoutConfig, settings: AudioSettings): 
 		state.totalElapsed += delta;
 		state.remainingSeconds -= delta;
 
-		// 5-second warnings
-		if (!warnedForCurrent && state.remainingSeconds <= 5 && state.remainingSeconds > 0) {
+		if (!warnedForCurrent && state.remainingSeconds <= WARNING_SECONDS && state.remainingSeconds > 0) {
 			warnedForCurrent = true;
-			// determine next item
 			const next = timeline[idx + 1];
 			if (settingsRef.sound) {
 				if (state.status === 'work' && next && next.type === 'pause') {
-					voice.speakAtCountdown('pause', 5);
+					voice.speakAtCountdown('pause', WARNING_SECONDS);
 				} else if ((state.status === 'pause' || state.status === 'countdown') && next && next.type === 'work') {
-					voice.speakAtCountdown('work', 5);
+					voice.speakAtCountdown('work', WARNING_SECONDS);
 				}
 			}
 			if (settingsRef.vibration) audio.vibrate([50, 40]);
 		}
 
 		if (state.remainingSeconds <= 0) {
-			// advance
 			idx += 1;
 			if (idx >= timeline.length) {
-				// complete
 				state.status = 'complete';
 				state.remainingSeconds = 0;
 				if (settingsRef.sound) voice.speak('Workout complete');
@@ -102,7 +101,6 @@ export function createTimerEngine(cfg: WorkoutConfig, settings: AudioSettings): 
 				return;
 			}
 
-			// play beep at exact switch
 			if (settingsRef.sound) audio.playBeep();
 			if (settingsRef.vibration) audio.vibrate(80);
 
@@ -112,16 +110,30 @@ export function createTimerEngine(cfg: WorkoutConfig, settings: AudioSettings): 
 		raf = requestAnimationFrame(tick);
 	}
 
+	function handleVisibilityChange() {
+		if (document.hidden) {
+			hiddenTimestamp = performance.now();
+		} else if (hiddenTimestamp !== null && lastTime !== 0) {
+			const now = performance.now();
+			const hiddenDuration = (now - hiddenTimestamp) / 1000;
+			lastTime = now;
+			state.remainingSeconds -= hiddenDuration;
+			state.totalElapsed += hiddenDuration;
+			hiddenTimestamp = null;
+		}
+	}
+
 	function start() {
 		if (!cfg || cfg.groups.length === 0) return;
-		// rebuild timeline in case cfg changed
 		timeline = buildTimeline(cfg);
 		idx = 0;
 		setStateFromItem(timeline[0]);
 		state.totalElapsed = 0;
 		lastTime = 0;
 		warnedForCurrent = false;
+		hiddenTimestamp = null;
 		if (settingsRef.sound) voice.speak('Starting workout');
+		document.addEventListener('visibilitychange', handleVisibilityChange);
 		raf = requestAnimationFrame(tick);
 	}
 
@@ -130,6 +142,7 @@ export function createTimerEngine(cfg: WorkoutConfig, settings: AudioSettings): 
 			cancelAnimationFrame(raf);
 			raf = null;
 		}
+		document.removeEventListener('visibilitychange', handleVisibilityChange);
 	}
 
 	function pause() {
@@ -168,7 +181,7 @@ export function createTimerEngine(cfg: WorkoutConfig, settings: AudioSettings): 
 		state.prevStatus = undefined;
 	}
 
-	const engine: TimerEngine & { updateSettings?: (s: AudioSettings) => void } = {
+	const engine: TimerEngine = {
 		state,
 		config: cfg,
 		settings: settingsRef,
@@ -176,12 +189,11 @@ export function createTimerEngine(cfg: WorkoutConfig, settings: AudioSettings): 
 		pause,
 		resume,
 		reset,
-		cleanup: cancelLoop
-	};
-
-	engine.updateSettings = (s: AudioSettings) => {
-		settingsRef = s;
-		engine.settings = settingsRef;
+		cleanup: cancelLoop,
+		updateSettings: (s: AudioSettings) => {
+			settingsRef = s;
+			engine.settings = settingsRef;
+		}
 	};
 
 	return engine;

@@ -13,6 +13,9 @@
 	import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
 	import TimerIcon from "@lucide/svelte/icons/timer";
 	import LogInIcon from "@lucide/svelte/icons/log-in";
+	import LogOutIcon from "@lucide/svelte/icons/log-out";
+	import User2Icon from "@lucide/svelte/icons/user-2";
+	import ChevronsUpDownIcon from "@lucide/svelte/icons/chevrons-up-down";
 	import type { ComponentProps } from "svelte";
 
 	let {
@@ -162,13 +165,87 @@
 		</Sidebar.Group>
 	</Sidebar.Content>
 
-	<Sidebar.Footer class="p-4 flex flex-col gap-2">
-		<Button href="/login" variant="outline" class="w-full">
-			<LogInIcon class="w-4 h-4 mr-2" />
-			Login
-		</Button>
-		<p class="text-[10px] text-muted-foreground text-center px-2">
-			Log in to save and sync your workout configurations.
-		</p>
+	<Sidebar.Footer class="p-4">
+		{#if appState.user}
+			<Sidebar.Menu>
+				<Sidebar.MenuItem>
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger class="w-full">
+								{#snippet child({ props })}
+								<Sidebar.MenuButton
+									size="lg"
+									class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+									{...props}
+								>
+									<div
+										class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"
+									>
+										<User2Icon class="size-4" />
+									</div>
+									<div
+										class="grid flex-1 text-left text-sm leading-tight"
+									>
+										<span class="truncate font-semibold"
+											>{appState.user!.name}</span
+										>
+										<span class="truncate text-xs"
+											>{appState.user!.email}</span
+										>
+									</div>
+									<ChevronsUpDownIcon
+										class="ml-auto size-4"
+									/>
+								</Sidebar.MenuButton>
+							{/snippet}
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content
+							class="w-[--bits-dropdown-menu-anchor-width] min-w-56 rounded-lg"
+							align="start"
+							side="bottom"
+							sideOffset={4}
+						>
+							<DropdownMenu.Label class="p-0 font-normal">
+								<div
+									class="flex items-center gap-2 px-1 py-1.5 text-left text-sm"
+								>
+									<div
+										class="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"
+									>
+										<User2Icon class="size-4" />
+									</div>
+									<div
+										class="grid flex-1 text-left text-sm leading-tight"
+									>
+										<span class="truncate font-semibold"
+											>{appState.user.name}</span
+										>
+										<span class="truncate text-xs"
+											>{appState.user.email}</span
+										>
+									</div>
+								</div>
+							</DropdownMenu.Label>
+							<DropdownMenu.Separator />
+							<DropdownMenu.Item
+								onclick={() => appState.logout()}
+							>
+								<LogOutIcon class="mr-2 size-4" />
+								Log out
+							</DropdownMenu.Item>
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
+				</Sidebar.MenuItem>
+			</Sidebar.Menu>
+		{:else}
+			<div class="flex flex-col gap-2">
+				<Button href="/login" variant="outline" class="w-full">
+					<LogInIcon class="w-4 h-4 mr-2" />
+					Login
+				</Button>
+				<p class="text-[10px] text-muted-foreground text-center px-1">
+					Log in to save and sync your workout configurations.
+				</p>
+			</div>
+		{/if}
 	</Sidebar.Footer>
 </Sidebar.Root>

@@ -6,6 +6,16 @@
     import MailIcon from "@lucide/svelte/icons/mail";
     import LockIcon from "@lucide/svelte/icons/lock";
     import ArrowLeftIcon from "@lucide/svelte/icons/arrow-left";
+    import { appState } from "$lib/state.svelte";
+    import { goto } from "$app/navigation";
+
+    let email = $state("demo@example.com");
+
+    function handleLogin(e: Event) {
+        e.preventDefault();
+        appState.login("Demo User", email);
+        goto("/");
+    }
 </script>
 
 <svelte:head>
@@ -41,7 +51,7 @@
             </div>
 
             <!-- Form -->
-            <form class="space-y-4" onsubmit={(e) => e.preventDefault()}>
+            <form class="space-y-4" onsubmit={handleLogin}>
                 <div class="space-y-2">
                     <Label for="email" class="text-sm font-medium">Email</Label>
                     <div class="relative">
@@ -53,6 +63,7 @@
                             type="email"
                             placeholder="you@example.com"
                             class="pl-10"
+                            bind:value={email}
                         />
                     </div>
                 </div>

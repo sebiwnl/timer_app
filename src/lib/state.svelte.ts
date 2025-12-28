@@ -13,6 +13,16 @@ class GlobalState {
 
     savedConfigs = $state<SavedConfig[]>(loadConfigs());
 
+    user = $state<{ name: string; email: string } | null>(null);
+
+    login(name: string, email: string) {
+        this.user = { name, email };
+    }
+
+    logout() {
+        this.user = null;
+    }
+
     updateConfig(newConfig: WorkoutConfig) {
         this.config = newConfig;
     }
@@ -23,13 +33,11 @@ class GlobalState {
 
     saveCurrentConfig(name: string) {
         if (!name.trim() || this.config.groups.length === 0) return;
-        persistConfig(name.trim(), this.config);
-        this.savedConfigs = loadConfigs();
+        this.savedConfigs = persistConfig(name.trim(), this.config);
     }
 
     deleteSavedConfig(id: string) {
-        persistDelete(id);
-        this.savedConfigs = loadConfigs();
+        this.savedConfigs = persistDelete(id);
     }
 
     loadSavedConfig(id: string) {

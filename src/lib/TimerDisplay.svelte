@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { TimerState, WorkoutConfig } from "./types";
+	import { formatTime } from "./utils";
 
 	interface Props {
 		state: TimerState;
@@ -7,13 +8,6 @@
 	}
 
 	let { state, config }: Props = $props();
-
-	function formatTime(seconds: number): string {
-		const remaining = Math.max(0, Math.ceil(seconds));
-		const mins = Math.floor(remaining / 60);
-		const secs = remaining % 60;
-		return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-	}
 
 	function getStatusLabel(): string {
 		switch (state.status) {

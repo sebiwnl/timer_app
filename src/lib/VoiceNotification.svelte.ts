@@ -10,11 +10,15 @@ export interface VoiceOptions extends VoicePreferences {
 	immediate?: boolean;
 }
 
+const VOICES_LOAD_TIMEOUT = 5000;
+
 export class VoiceNotificationService {
 	private voices: SpeechSynthesisVoice[] = [];
 	private voicesLoaded = false;
 	private isSpeaking = false;
 	private pendingQueue: string[] = [];
+	private voicesLoadTimer: number | null = null;
+	private voicesChangedHandler: (() => void) | null = null;
 	
 	private preferences: VoicePreferences = {
 		rate: 1.1,
@@ -29,7 +33,6 @@ export class VoiceNotificationService {
 	private initializeVoices() {
 		if (typeof window === 'undefined') return;
 		if (!('speechSynthesis' in window)) {
-			console.warn('[VoiceNotification] Speech synthesis not supported');
 			return;
 		}
 
@@ -38,15 +41,46 @@ export class VoiceNotificationService {
 		if (voices.length > 0) {
 			this.voices = voices;
 			this.voicesLoaded = true;
-			console.log(`[VoiceNotification] ${voices.length} voices loaded immediately`);
 		} else {
-			speechSynthesis.onvoiceschanged = () => {
-				this.voices = speechSynthesis.getVoices();
-				this.voicesLoaded = true;
-				console.log(`[VoiceNotification] ${this.voices.length} voices loaded after event`);
-				this.processPendingQueue();
-			};
+			this.voicesChangedHandler = () => this.handleVoicesChanged();
+			speechSynthesis.onvoiceschanged = this.voicesChangedHandler;
+			
+			this.voicesLoadTimer = window.setTimeout(() => {
+				this.forceLoadVoices();
+			}, VOICES_LOAD_TIMEOUT);
 		}
+	}
+
+	private handleVoicesChanged() {
+		this.voices = speechSynthesis.getVoices();
+		if (this.voices.length > 0) {
+			this.voicesLoaded = true;
+			this.clearLoadListeners();
+			this.processPendingQueue();
+		}
+	}
+
+	private forceLoadVoices() {
+		this.voices = speechSynthesis.getVoices();
+		this.voicesLoaded = true;
+		this.clearLoadListeners();
+		this.processPendingQueue();
+	}
+
+	private clearLoadListeners() {
+		if (this.voicesLoadTimer !== null) {
+			clearTimeout(this.voicesLoadTimer);
+			this.voicesLoadTimer = null;
+		}
+		if (this.voicesChangedHandler) {
+			speechSynthesis.onvoiceschanged = null;
+			this.voicesChangedHandler = null;
+		}
+	}
+
+	cleanup() {
+		this.cancel();
+		this.clearLoadListeners();
 	}
 
 	private getBestVoice(): SpeechSynthesisVoice | null {
