@@ -80,9 +80,9 @@ export function createTimerEngine(cfg: WorkoutConfig, settings: AudioSettings): 
 			const next = timeline[idx + 1];
 			if (settingsRef.sound) {
 				if (state.status === 'work' && next && next.type === 'pause') {
-					audio.speak('5 seconds to pause');
+					audio.speak('Rest in 5 seconds');
 				} else if ((state.status === 'pause' || state.status === 'countdown') && next && next.type === 'work') {
-					audio.speak('5 seconds to round start');
+					audio.speak('Work in 5 seconds');
 				}
 			}
 			if (settingsRef.vibration) audio.vibrate([50, 40]);

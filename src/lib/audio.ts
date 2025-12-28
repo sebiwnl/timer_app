@@ -57,6 +57,18 @@ export class AudioService {
 		const u = new SpeechSynthesisUtterance(text);
 		u.rate = 1.1; // Slightly faster for workout context
 		u.pitch = 1.0;
+		u.volume = 1.0;
+
+		// Ensure voices are loaded (Chrome weirdness)
+		const voices = speechSynthesis.getVoices();
+		if (voices.length > 0) {
+			// Try to find a good English voice (e.g., Google US English, or just the first en-*)
+			const preferred = voices.find(v => v.name.includes('Google US English')) ||
+				voices.find(v => v.lang.startsWith('en')) ||
+				voices[0];
+			if (preferred) u.voice = preferred;
+		}
+
 		speechSynthesis.speak(u);
 	}
 
