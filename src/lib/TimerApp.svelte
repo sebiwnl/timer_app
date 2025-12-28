@@ -6,7 +6,6 @@
     import TimerDisplay from "$lib/TimerDisplay.svelte";
     import Controls from "$lib/Controls.svelte";
     import { appState } from "$lib/state.svelte";
-    import { SidebarTrigger } from "$lib/components/ui/sidebar/index.js";
 
     // Timer engine instance
     let timerEngine = $state<ReturnType<typeof createTimerEngine> | null>(null);
@@ -111,59 +110,52 @@
     });
 </script>
 
-<div class="min-h-screen flex flex-col bg-background text-foreground">
-    <!-- Minimal header with just sidebar trigger -->
-    <header
-        class="flex items-center h-14 px-4 border-b border-border/40 bg-background/80 backdrop-blur-sm sticky top-0 z-50"
-    >
-        <SidebarTrigger />
-    </header>
+<div
+    class="min-h-[calc(100vh-2.5rem)] flex flex-col items-center justify-start sm:justify-center pt-2 sm:pt-0 px-4 sm:px-8 bg-background text-foreground"
+>
+    <!-- Config Editor View -->
+    {#if timerState.status === "idle"}
+        <div class="w-full max-w-lg animate-in fade-in duration-500">
+            <ConfigEditor
+                config={appState.config}
+                {isRunning}
+                onUpdate={updateConfig}
+                onStart={handleStart}
+            />
+        </div>
+    {/if}
 
-    <main class="flex-1 flex flex-col items-center justify-center p-6 sm:p-8">
-        <!-- Config Editor View -->
-        {#if timerState.status === "idle"}
-            <div class="w-full max-w-lg animate-in fade-in duration-500">
-                <ConfigEditor
-                    config={appState.config}
-                    {isRunning}
-                    onUpdate={updateConfig}
-                    onStart={handleStart}
-                />
-            </div>
-        {/if}
+    <!-- Active Timer View -->
+    {#if timerState.status !== "idle" && timerState.status !== "complete"}
+        <div
+            class="w-full max-w-lg flex flex-col items-center gap-8 animate-in fade-in duration-500"
+        >
+            <TimerDisplay state={timerState} config={appState.config} />
+            <Controls
+                state={timerState}
+                onStart={handleStart}
+                onPause={handlePause}
+                onResume={handleResume}
+                onReplay={handleReplay}
+                onStop={handleStop}
+            />
+        </div>
+    {/if}
 
-        <!-- Active Timer View -->
-        {#if timerState.status !== "idle" && timerState.status !== "complete"}
-            <div
-                class="w-full max-w-lg flex flex-col items-center gap-8 animate-in fade-in duration-500"
-            >
-                <TimerDisplay state={timerState} config={appState.config} />
-                <Controls
-                    state={timerState}
-                    onStart={handleStart}
-                    onPause={handlePause}
-                    onResume={handleResume}
-                    onReplay={handleReplay}
-                    onStop={handleStop}
-                />
-            </div>
-        {/if}
-
-        <!-- Complete View -->
-        {#if timerState.status === "complete"}
-            <div
-                class="w-full max-w-lg flex flex-col items-center gap-8 animate-in fade-in duration-500"
-            >
-                <TimerDisplay state={timerState} config={appState.config} />
-                <Controls
-                    state={timerState}
-                    onStart={handleStart}
-                    onPause={handlePause}
-                    onResume={handleResume}
-                    onReplay={handleReplay}
-                    onStop={handleStop}
-                />
-            </div>
-        {/if}
-    </main>
+    <!-- Complete View -->
+    {#if timerState.status === "complete"}
+        <div
+            class="w-full max-w-lg flex flex-col items-center gap-8 animate-in fade-in duration-500"
+        >
+            <TimerDisplay state={timerState} config={appState.config} />
+            <Controls
+                state={timerState}
+                onStart={handleStart}
+                onPause={handlePause}
+                onResume={handleResume}
+                onReplay={handleReplay}
+                onStop={handleStop}
+            />
+        </div>
+    {/if}
 </div>

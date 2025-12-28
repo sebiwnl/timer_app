@@ -1,5 +1,6 @@
 import type { TimerState, WorkoutConfig, AudioSettings } from './types';
 import { audio } from './audio';
+import { voice } from './VoiceNotification.svelte';
 
 const COUNTDOWN_DURATION = 5;
 
@@ -80,9 +81,9 @@ export function createTimerEngine(cfg: WorkoutConfig, settings: AudioSettings): 
 			const next = timeline[idx + 1];
 			if (settingsRef.sound) {
 				if (state.status === 'work' && next && next.type === 'pause') {
-					audio.speak('Rest in 5 seconds');
+					voice.speakAtCountdown('pause', 5);
 				} else if ((state.status === 'pause' || state.status === 'countdown') && next && next.type === 'work') {
-					audio.speak('Work in 5 seconds');
+					voice.speakAtCountdown('work', 5);
 				}
 			}
 			if (settingsRef.vibration) audio.vibrate([50, 40]);
@@ -95,7 +96,7 @@ export function createTimerEngine(cfg: WorkoutConfig, settings: AudioSettings): 
 				// complete
 				state.status = 'complete';
 				state.remainingSeconds = 0;
-				if (settingsRef.sound) audio.speak('Workout complete');
+				if (settingsRef.sound) voice.speak('Workout complete');
 				if (settingsRef.vibration) audio.vibrate([200, 100, 200]);
 				cancelLoop();
 				return;
@@ -120,7 +121,7 @@ export function createTimerEngine(cfg: WorkoutConfig, settings: AudioSettings): 
 		state.totalElapsed = 0;
 		lastTime = 0;
 		warnedForCurrent = false;
-		if (settingsRef.sound) audio.speak('Starting workout');
+		if (settingsRef.sound) voice.speak('Starting workout');
 		raf = requestAnimationFrame(tick);
 	}
 
