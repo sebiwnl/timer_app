@@ -8,13 +8,29 @@
     import ArrowLeftIcon from "@lucide/svelte/icons/arrow-left";
     import { appState } from "$lib/state.svelte";
     import { goto } from "$app/navigation";
+    import ForgotPasswordModal from "$lib/components/ForgotPasswordModal.svelte";
 
-    let email = $state("demo@example.com");
+    let email = $state("");
+    let password = $state("");
+    let showForgotPassword = $state(false);
 
-    function handleLogin(e: Event) {
+    async function handleLogin(e: Event) {
         e.preventDefault();
-        appState.login("Demo User", email);
-        goto("/");
+        appState.clearAuthError();
+
+        const success = await appState.login(email, password);
+
+        if (success) {
+            goto("/");
+        }
+    }
+
+    function openForgotPassword() {
+        showForgotPassword = true;
+    }
+
+    function closeForgotPassword() {
+        showForgotPassword = false;
     }
 </script>
 
@@ -64,18 +80,21 @@
                             placeholder="you@example.com"
                             class="pl-10"
                             bind:value={email}
+                            disabled={appState.authLoading}
                         />
                     </div>
                 </div>
 
                 <div class="space-y-2">
                     <div class="flex items-center justify-between">
-                        <Label for="password" class="text-sm font-medium"
-                            >Password</Label
+                        <Label for="password" class="text-sm font-medium">Password</Label>
+                        <button
+                            type="button"
+                            onclick={openForgotPassword}
+                            class="text-xs text-primary hover:underline"
                         >
-                        <a href="#" class="text-xs text-primary hover:underline"
-                            >Forgot password?</a
-                        >
+                            Forgot password?
+                        </button>
                     </div>
                     <div class="relative">
                         <LockIcon
@@ -86,12 +105,28 @@
                             type="password"
                             placeholder="••••••••"
                             class="pl-10"
+                            bind:value={password}
+                            disabled={appState.authLoading}
                         />
                     </div>
                 </div>
 
-                <Button type="submit" class="w-full mt-6">Sign in</Button>
+                {#if appState.authError}
+                    <div class="p-3 text-sm text-destructive bg-destructive/10 rounded-lg">
+                        {appState.authError}
+                    </div>
+                {/if}
+
+                <Button
+                    type="submit"
+                    class="w-full mt-6"
+                    disabled={appState.authLoading || !email || !password}
+                >
+                    {appState.authLoading ? 'Signing in...' : 'Sign in'}
+                </Button>
             </form>
+
+            <ForgotPasswordModal bind:open={showForgotPassword} />
 
             <p class="text-center text-sm text-muted-foreground mt-6">
                 Don't have an account?

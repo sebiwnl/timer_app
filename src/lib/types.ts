@@ -31,3 +31,12 @@ export interface SavedConfig {
 	config: WorkoutConfig;
 	createdAt: number;
 }
+
+export interface AuthError {
+	message: string;
+}
+
+export interface AuthState {
+	loading: boolean;
+	error: string | null;
+}

@@ -19,11 +19,15 @@
 
 	let configName = $state("");
 	let editingGroupId = $state<string | null>(null);
+	let initialized = false;
 
-	// Set initial editing group ID
+	// Set initial editing group ID only on first render
 	$effect(() => {
-		if (!editingGroupId && config.groups.length > 0) {
-			editingGroupId = config.groups[0].id;
+		if (!initialized) {
+			if (config.groups.length > 0) {
+				editingGroupId = config.groups[0].id;
+			}
+			initialized = true;
 		}
 	});
 
@@ -69,6 +73,10 @@
 
 		const filtered = config.groups.filter((g) => g.id !== id);
 		onUpdate({ ...config, groups: filtered });
+
+		if (editingGroupId === id) {
+			editingGroupId = null;
+		}
 	}
 
 	function handleSave() {
@@ -136,13 +144,27 @@
 						class="bg-card rounded-xl p-5 border border-primary/30 shadow-sm transition-all"
 						class:opacity-60={isRunning}
 					>
-						<div class="flex justify-between items-center mb-5">
+						<div
+							class="flex justify-between items-center mb-5 cursor-pointer active:scale-[0.99] transition-transform"
+							role="button"
+							tabindex="0"
+							onclick={() => editingGroupId = null}
+							onkeydown={(e) => {
+								if (e.key === 'Enter' || e.key === ' ') {
+									e.preventDefault();
+									editingGroupId = null;
+								}
+							}}
+						>
 							<span class="text-sm font-medium text-primary">
 								Group {index + 1}
 							</span>
 							<button
 								class="w-7 h-7 rounded-lg flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-								onclick={() => removeGroup(group.id)}
+								onclick={(e) => {
+									e.stopPropagation();
+									removeGroup(group.id);
+								}}
 								disabled={isRunning}
 								aria-label="Remove group"
 							>
@@ -295,7 +317,7 @@
 
 		<!-- Save Section -->
 		<div class="border-t border-border pt-6 mt-2">
-			<div class="flex gap-2">
+			<form onsubmit={(e) => { e.preventDefault(); handleSave(); }} class="flex gap-2">
 				<input
 					type="text"
 					placeholder="Workout name"
@@ -304,13 +326,13 @@
 					class="flex-1 h-10 px-4 rounded-xl bg-background border border-border focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none transition-all text-sm"
 				/>
 				<button
-					onclick={handleSave}
+					type="submit"
 					disabled={isRunning || !configName.trim()}
 					class="px-5 h-10 rounded-xl bg-foreground text-background font-medium text-sm hover:opacity-90 transition-all active:scale-[0.98] disabled:opacity-30"
 				>
 					Save
 				</button>
-			</div>
+			</form>
 		</div>
 	{/if}
 </div>

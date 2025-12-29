@@ -4,8 +4,26 @@
     import * as Sidebar from "$lib/components/ui/sidebar/index.js";
     import AppSidebar from "$lib/components/app-sidebar.svelte";
     import { SidebarTrigger } from "$lib/components/ui/sidebar/index.js";
+    import { appState } from "$lib/state.svelte";
+    import { supabase } from "$lib/supabaseClient";
+    import { onMount } from "svelte";
+    import { page } from "$app/stores";
+    import { goto } from "$app/navigation";
 
     let { children } = $props();
+
+    onMount(async () => {
+        await appState.initializeSession();
+
+        const hash = $page.url.hash;
+        if (hash && (hash.includes('access_token') || hash.includes('refresh_token'))) {
+            const { data, error } = await supabase.auth.getSession();
+            if (data.session && data.session.user) {
+                appState.user = data.session.user;
+                goto("/", { replaceState: true });
+            }
+        }
+    });
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>

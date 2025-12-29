@@ -186,10 +186,10 @@
 										class="grid flex-1 text-left text-sm leading-tight"
 									>
 										<span class="truncate font-semibold"
-											>{appState.user!.name}</span
+											>{appState.userName || 'User'}</span
 										>
 										<span class="truncate text-xs"
-											>{appState.user!.email}</span
+											>{appState.userEmail}</span
 										>
 									</div>
 									<ChevronsUpDownIcon
@@ -217,10 +217,10 @@
 										class="grid flex-1 text-left text-sm leading-tight"
 									>
 										<span class="truncate font-semibold"
-											>{appState.user.name}</span
+											>{appState.userName || 'User'}</span
 										>
 										<span class="truncate text-xs"
-											>{appState.user.email}</span
+											>{appState.userEmail}</span
 										>
 									</div>
 								</div>
