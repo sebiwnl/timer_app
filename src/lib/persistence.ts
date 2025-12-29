@@ -1,7 +1,7 @@
 import type { SavedConfig, WorkoutConfig } from './types';
 
 const STORAGE_KEY = 'workout_timer_configs';
-const MAX_SAVED = 5;
+const MAX_SAVED = 10;
 
 export function saveConfig(name: string, config: WorkoutConfig): SavedConfig[] {
 	const configs = loadConfigs();

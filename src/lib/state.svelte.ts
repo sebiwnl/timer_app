@@ -2,6 +2,12 @@ import { loadConfigs, saveConfig as persistConfig, deleteConfig as persistDelete
 import type { WorkoutConfig, AudioSettings, SavedConfig } from './types';
 import { supabase } from './supabaseClient';
 import type { User, AuthError as SupabaseAuthError } from '@supabase/supabase-js';
+import {
+	fetchConfigsFromSupabase,
+	saveConfigToSupabase,
+	deleteConfigFromSupabase,
+	convertDatabaseConfig
+} from './configSync';
 
 class GlobalState {
     config = $state<WorkoutConfig>({
@@ -21,6 +27,12 @@ class GlobalState {
 
     authError = $state<string | null>(null);
 
+    syncState = $state({
+        loading: false,
+        lastSynced: null as number | null,
+        error: null as string | null
+    });
+
     async initializeSession() {
         const { data: { session }, error } = await supabase.auth.getSession();
         if (error) {
@@ -29,17 +41,43 @@ class GlobalState {
         }
         if (session?.user) {
             this.user = session.user;
+            await this.loadConfigsFromSupabase();
         }
 
-        supabase.auth.onAuthStateChange((event, session) => {
+        supabase.auth.onAuthStateChange(async (event, session) => {
             if (event === 'SIGNED_IN') {
                 this.user = session?.user ?? null;
+                if (session?.user) {
+                    await this.loadConfigsFromSupabase();
+                }
             } else if (event === 'SIGNED_OUT') {
                 this.user = null;
+                this.syncState.error = null;
             } else if (event === 'USER_UPDATED') {
                 this.user = session?.user ?? null;
             }
         });
+    }
+
+    async loadConfigsFromSupabase() {
+        if (!this.user?.id) return;
+
+        this.syncState.loading = true;
+        this.syncState.error = null;
+
+        try {
+            const dbConfigs = await fetchConfigsFromSupabase(this.user.id);
+            const savedConfigs = dbConfigs.map(convertDatabaseConfig);
+            this.savedConfigs = savedConfigs.slice(0, 10);
+
+            localStorage.setItem('workout_timer_configs', JSON.stringify(this.savedConfigs));
+            this.syncState.lastSynced = Date.now();
+        } catch (error) {
+            console.error('[State] Failed to load configs from Supabase:', error);
+            this.syncState.error = 'Failed to sync configs. Using local data.';
+        } finally {
+            this.syncState.loading = false;
+        }
     }
 
     async login(email: string, password: string) {
@@ -177,13 +215,59 @@ class GlobalState {
         this.settings = { ...this.settings, ...newSettings };
     }
 
-    saveCurrentConfig(name: string) {
+    async saveCurrentConfig(name: string) {
         if (!name.trim() || this.config.groups.length === 0) return;
-        this.savedConfigs = persistConfig(name.trim(), this.config);
+
+        const trimmedName = name.trim();
+        const configCopy = { ...this.config };
+
+        const configs = [...this.savedConfigs];
+        const newConfig: SavedConfig = {
+            id: Date.now().toString(),
+            name: trimmedName,
+            config: configCopy,
+            createdAt: Date.now()
+        };
+
+        configs.unshift(newConfig);
+        const trimmed = configs.slice(0, 10);
+
+        this.savedConfigs = trimmed;
+        localStorage.setItem('workout_timer_configs', JSON.stringify(trimmed));
+
+        if (this.user && this.user.id) {
+            try {
+                const dbConfig = await saveConfigToSupabase(this.user.id, trimmedName, configCopy);
+                const syncedConfig = convertDatabaseConfig(dbConfig);
+                const index = this.savedConfigs.findIndex(c => c.id === newConfig.id);
+                if (index !== -1) {
+                    this.savedConfigs[index] = syncedConfig;
+                    localStorage.setItem('workout_timer_configs', JSON.stringify(this.savedConfigs));
+                }
+                this.syncState.lastSynced = Date.now();
+                this.syncState.error = null;
+            } catch (error) {
+                console.error('[State] Failed to save config to Supabase:', error);
+                this.syncState.error = 'Failed to save to cloud. Data saved locally.';
+            }
+        }
     }
 
-    deleteSavedConfig(id: string) {
-        this.savedConfigs = persistDelete(id);
+    async deleteSavedConfig(id: string) {
+        const filtered = this.savedConfigs.filter(c => c.id !== id);
+        this.savedConfigs = filtered;
+        localStorage.setItem('workout_timer_configs', JSON.stringify(filtered));
+
+        if (this.user && this.user.id) {
+            try {
+                await deleteConfigFromSupabase(id);
+                this.syncState.lastSynced = Date.now();
+                this.syncState.error = null;
+            } catch (error) {
+                console.error('[State] Failed to delete config from Supabase:', error);
+                this.syncState.error = 'Failed to delete from cloud. Data deleted locally.';
+            }
+        }
     }
 
     loadSavedConfig(id: string) {

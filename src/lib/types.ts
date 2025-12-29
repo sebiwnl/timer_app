@@ -40,3 +40,18 @@ export interface AuthState {
 	loading: boolean;
 	error: string | null;
 }
+
+export interface DatabaseConfig {
+	id: string;
+	user_id: string;
+	name: string;
+	config: WorkoutConfig;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface SyncState {
+	loading: boolean;
+	lastSynced: number | null;
+	error: string | null;
+}

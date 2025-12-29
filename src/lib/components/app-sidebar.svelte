@@ -163,6 +163,55 @@
 				</div>
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
+
+		<!-- Sync Status -->
+		{#if appState.user}
+			<Sidebar.Group class="mt-4">
+				<Sidebar.GroupLabel
+					class="text-xs font-medium text-muted-foreground px-2 mb-1"
+					>Sync</Sidebar.GroupLabel
+				>
+				<Sidebar.GroupContent class="space-y-1 px-2">
+					{#if appState.syncState.loading}
+						<div
+							class="flex items-center gap-2 py-2 px-2 rounded-lg bg-accent/50"
+						>
+							<div
+								class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"
+							></div>
+							<span class="text-sm text-muted-foreground"
+								>Syncing...</span
+							>
+						</div>
+					{:else if appState.syncState.error}
+						<div
+							class="flex items-center gap-2 py-2 px-2 rounded-lg bg-destructive/10"
+						>
+							<div
+								class="w-2 h-2 rounded-full bg-destructive"
+							></div>
+							<span
+								class="text-sm text-destructive {appState.syncState.error.length > 30 ? 'text-xs' : ''}"
+							>
+								{appState.syncState.error}
+							</span>
+						</div>
+					{:else if appState.syncState.lastSynced}
+						<div
+							class="flex items-center gap-2 py-2 px-2 rounded-lg"
+						>
+							<div
+								class="w-2 h-2 rounded-full bg-green-500"
+							></div>
+							<span class="text-sm text-muted-foreground">
+								Synced
+								{new Date(appState.syncState.lastSynced).toLocaleTimeString()}
+							</span>
+						</div>
+					{/if}
+				</Sidebar.GroupContent>
+			</Sidebar.Group>
+		{/if}
 	</Sidebar.Content>
 
 	<Sidebar.Footer class="p-4">
