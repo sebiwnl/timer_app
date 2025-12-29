@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { RoundGroup } from "./types";
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -26,4 +27,10 @@ export function formatDuration(seconds: number): string {
 		return `${mins}m ${secs}s`;
 	}
 	return `${secs}s`;
+}
+
+export function calculateTotalDuration(groups: RoundGroup[]): number {
+	return groups.reduce((total, group) => {
+		return total + group.rounds * group.workSeconds + (group.rounds - 1) * group.pauseSeconds;
+	}, 0);
 }

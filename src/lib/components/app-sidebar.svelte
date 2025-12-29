@@ -26,7 +26,7 @@
 	}: ComponentProps<typeof Sidebar.Root> = $props();
 
 	function handleLoad(id: string) {
-		appState.loadSavedConfig(id);
+		appState.loadConfigForEdit(id);
 	}
 
 	function handleDelete(id: string) {
@@ -36,15 +36,25 @@
 
 <Sidebar.Root bind:ref variant="inset" {...restProps}>
 	<Sidebar.Header class="p-4">
-		<div class="flex items-center gap-3">
+		<button
+			class="flex items-center gap-3 w-full cursor-pointer hover:opacity-80 transition-opacity"
+			onclick={() => appState.showList()}
+		>
 			<div
 				class="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center"
 			>
 				<TimerIcon class="w-5 h-5 text-primary" />
 			</div>
 			<span class="text-lg font-semibold tracking-tight">Timer</span>
-		</div>
+		</button>
 	</Sidebar.Header>
+
+	<div class="p-3">
+		<Button class="w-full justify-start" onclick={() => appState.createNewTimer()}>
+			<PlusIcon class="w-4 h-4 mr-2" />
+			Create new timer
+		</Button>
+	</div>
 
 	<Sidebar.Content class="px-2">
 		<!-- Configuration -->

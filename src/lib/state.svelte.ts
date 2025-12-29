@@ -9,7 +9,12 @@ import {
 	convertDatabaseConfig
 } from './configSync';
 
+type AppView = 'list' | 'editor' | 'runner';
+
 class GlobalState {
+    view = $state<AppView>('list');
+    editingConfigId = $state<string | null>(null);
+
     config = $state<WorkoutConfig>({
         groups: []
     });
@@ -278,6 +283,34 @@ class GlobalState {
             return true;
         }
         return false;
+    }
+
+    showList(): void {
+        this.view = 'list';
+        this.editingConfigId = null;
+    }
+
+    showEditor(configId?: string): void {
+        this.editingConfigId = configId || null;
+        this.view = 'editor';
+    }
+
+    showRunner(): void {
+        this.view = 'runner';
+    }
+
+    createNewTimer(): void {
+        this.config = { groups: [] };
+        this.showEditor();
+    }
+
+    loadConfigForEdit(id: string): void {
+        const config = this.savedConfigs.find(c => c.id === id);
+        if (config) {
+            this.config = { ...config.config };
+            this.editingConfigId = id;
+            this.showEditor(id);
+        }
     }
 }
 
