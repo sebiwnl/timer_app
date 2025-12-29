@@ -1,21 +1,23 @@
 <script lang="ts">
 	import * as Sidebar from "$lib/components/ui/sidebar/index.js";
+	import * as Collapsible from "$lib/components/ui/collapsible/index.js";
 	import { appState } from "$lib/state.svelte";
 	import { Switch } from "$lib/components/ui/switch/index.js";
 	import { Label } from "$lib/components/ui/label/index.js";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
+	import { audio } from "$lib/audio";
 	import Volume2Icon from "@lucide/svelte/icons/volume-2";
 	import VolumeXIcon from "@lucide/svelte/icons/volume-x";
 	import VibrationIcon from "@lucide/svelte/icons/vibrate";
-	import FolderIcon from "@lucide/svelte/icons/folder";
 	import Trash2Icon from "@lucide/svelte/icons/trash-2";
-	import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
 	import TimerIcon from "@lucide/svelte/icons/timer";
 	import LogInIcon from "@lucide/svelte/icons/log-in";
 	import LogOutIcon from "@lucide/svelte/icons/log-out";
 	import User2Icon from "@lucide/svelte/icons/user-2";
 	import ChevronsUpDownIcon from "@lucide/svelte/icons/chevrons-up-down";
+	import PlusIcon from "@lucide/svelte/icons/plus";
+	import MinusIcon from "@lucide/svelte/icons/minus";
 	import type { ComponentProps } from "svelte";
 
 	let {
@@ -45,173 +47,152 @@
 	</Sidebar.Header>
 
 	<Sidebar.Content class="px-2">
-		<!-- Saved Workouts -->
+		<!-- Configuration -->
 		<Sidebar.Group>
-			<Sidebar.GroupLabel
-				class="text-xs font-medium text-muted-foreground px-2 mb-1"
-				>Saved</Sidebar.GroupLabel
-			>
-			<Sidebar.GroupContent>
-				<Sidebar.Menu>
-					<Sidebar.MenuItem>
-						<DropdownMenu.Root>
-							<DropdownMenu.Trigger class="w-full">
-								{#snippet child({ props })}
-									<Sidebar.MenuButton
-										{...props}
-										class="w-full justify-between rounded-lg"
-									>
-										<div class="flex items-center gap-2.5">
-											<FolderIcon
-												class="size-4 text-muted-foreground"
-											/>
-											<span class="font-medium"
-												>Workouts</span
-											>
-										</div>
-										<ChevronDownIcon
-											class="size-4 text-muted-foreground"
-										/>
-									</Sidebar.MenuButton>
-								{/snippet}
-							</DropdownMenu.Trigger>
-							<DropdownMenu.Content class="w-56" align="start">
-								{#if appState.savedConfigs.length === 0}
-									<div
-										class="p-4 text-center text-sm text-muted-foreground"
-									>
-										No saved workouts yet
-									</div>
-								{:else}
+			<Sidebar.Menu>
+				<Sidebar.MenuItem>
+					<Collapsible.Root open={true} class="group/collapsible">
+						<Collapsible.Trigger>
+							{#snippet child({ props })}
+								<Sidebar.MenuButton {...props}>
+									Configuration
+									<PlusIcon
+										class="ms-auto group-data-[state=open]/collapsible:hidden"
+									/>
+									<MinusIcon
+										class="ms-auto group-data-[state=closed]/collapsible:hidden"
+									/>
+								</Sidebar.MenuButton>
+							{/snippet}
+						</Collapsible.Trigger>
+						{#if appState.savedConfigs.length === 0}
+							<Collapsible.Content>
+								<div
+									class="px-2 py-3 text-center text-sm text-muted-foreground"
+								>
+									No saved workouts yet
+								</div>
+							</Collapsible.Content>
+						{:else}
+							<Collapsible.Content>
+								<Sidebar.MenuSub>
 									{#each appState.savedConfigs as config (config.id)}
-										<div
-											class="flex items-center justify-between p-1"
-										>
-											<DropdownMenu.Item
-												class="flex-1 font-medium cursor-pointer"
-												onclick={() =>
-													handleLoad(config.id)}
+										<Sidebar.MenuSubItem>
+											<div
+												class="flex items-center gap-1 pr-1"
 											>
-												{config.name}
-											</DropdownMenu.Item>
-											<Button
-												variant="ghost"
-												size="icon"
-												class="size-8 text-muted-foreground hover:text-destructive transition-colors"
-												onclick={(e) => {
-													e.stopPropagation();
-													handleDelete(config.id);
-												}}
-											>
-												<Trash2Icon class="size-4" />
-											</Button>
-										</div>
+												<Sidebar.MenuSubButton
+													class="flex-1"
+													onclick={() =>
+														handleLoad(
+															config.id
+														)}
+												>
+													{config.name}
+												</Sidebar.MenuSubButton>
+												<Button
+													variant="ghost"
+													size="icon"
+													class="size-7 text-muted-foreground hover:text-destructive transition-colors shrink-0"
+													onclick={(e) => {
+														e.stopPropagation();
+														handleDelete(
+															config.id
+														);
+													}}
+												>
+													<Trash2Icon class="size-3.5" />
+												</Button>
+											</div>
+										</Sidebar.MenuSubItem>
 									{/each}
-								{/if}
-							</DropdownMenu.Content>
-						</DropdownMenu.Root>
-					</Sidebar.MenuItem>
-				</Sidebar.Menu>
-			</Sidebar.GroupContent>
+								</Sidebar.MenuSub>
+							</Collapsible.Content>
+						{/if}
+					</Collapsible.Root>
+				</Sidebar.MenuItem>
+			</Sidebar.Menu>
 		</Sidebar.Group>
 
 		<!-- Settings -->
-		<Sidebar.Group class="mt-4">
-			<Sidebar.GroupLabel
-				class="text-xs font-medium text-muted-foreground px-2 mb-1"
-				>Settings</Sidebar.GroupLabel
-			>
-			<Sidebar.GroupContent class="space-y-1 px-2">
-				<div
-					class="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-accent/50 transition-colors"
-				>
-					<div class="flex items-center gap-2.5">
-						{#if appState.settings.sound}
-							<Volume2Icon class="size-4 text-primary" />
-						{:else}
-							<VolumeXIcon class="size-4 text-muted-foreground" />
-						{/if}
-						<Label class="text-sm font-medium cursor-pointer"
-							>Sound</Label
-						>
-					</div>
-					<Switch
-						checked={appState.settings.sound}
-						onCheckedChange={(v) =>
-							appState.updateSettings({ sound: v })}
-					/>
-				</div>
-
-				<div
-					class="flex items-center justify-between py-2 px-2 rounded-lg hover:bg-accent/50 transition-colors"
-				>
-					<div class="flex items-center gap-2.5">
-						<VibrationIcon
-							class="size-4 {appState.settings.vibration
-								? 'text-primary'
-								: 'text-muted-foreground'}"
-						/>
-						<Label class="text-sm font-medium cursor-pointer"
-							>Vibration</Label
-						>
-					</div>
-					<Switch
-						checked={appState.settings.vibration}
-						onCheckedChange={(v) =>
-							appState.updateSettings({ vibration: v })}
-					/>
-				</div>
-			</Sidebar.GroupContent>
+		<Sidebar.Group>
+			<Sidebar.Menu>
+				<Sidebar.MenuItem>
+					<Collapsible.Root open={true} class="group/collapsible">
+						<Collapsible.Trigger>
+							{#snippet child({ props })}
+								<Sidebar.MenuButton {...props}>
+									Settings
+									<PlusIcon
+										class="ms-auto group-data-[state=open]/collapsible:hidden"
+									/>
+									<MinusIcon
+										class="ms-auto group-data-[state=closed]/collapsible:hidden"
+									/>
+								</Sidebar.MenuButton>
+							{/snippet}
+						</Collapsible.Trigger>
+						<Collapsible.Content>
+							<Sidebar.MenuSub class="space-y-1">
+								<Sidebar.MenuSubItem>
+									<div
+										class="flex items-center justify-between gap-1 pr-1"
+									>
+										{#if appState.settings.sound}
+											<Volume2Icon
+												class="size-4 text-primary"
+											/>
+										{:else}
+											<VolumeXIcon
+												class="size-4 text-muted-foreground"
+											/>
+										{/if}
+										<Sidebar.MenuSubButton class="flex-1">
+											Sound
+										</Sidebar.MenuSubButton>
+										<Switch
+											checked={
+												appState.settings.sound
+											}
+											onCheckedChange={(v) =>
+												appState.updateSettings({
+													sound: v
+												})}
+										/>
+									</div>
+								</Sidebar.MenuSubItem>
+								{#if audio.supportsVibration}
+									<Sidebar.MenuSubItem>
+										<div
+											class="flex items-center justify-between gap-1 pr-1"
+										>
+											<VibrationIcon
+												class="size-4 {appState.settings
+													.vibration
+													? 'text-primary'
+													: 'text-muted-foreground'}"
+											/>
+											<Sidebar.MenuSubButton class="flex-1">
+												Vibration
+											</Sidebar.MenuSubButton>
+											<Switch
+												checked={
+													appState.settings.vibration
+												}
+												onCheckedChange={(v) =>
+													appState.updateSettings({
+														vibration: v
+													})}
+											/>
+										</div>
+									</Sidebar.MenuSubItem>
+								{/if}
+							</Sidebar.MenuSub>
+						</Collapsible.Content>
+					</Collapsible.Root>
+				</Sidebar.MenuItem>
+			</Sidebar.Menu>
 		</Sidebar.Group>
-
-		<!-- Sync Status -->
-		{#if appState.user}
-			<Sidebar.Group class="mt-4">
-				<Sidebar.GroupLabel
-					class="text-xs font-medium text-muted-foreground px-2 mb-1"
-					>Sync</Sidebar.GroupLabel
-				>
-				<Sidebar.GroupContent class="space-y-1 px-2">
-					{#if appState.syncState.loading}
-						<div
-							class="flex items-center gap-2 py-2 px-2 rounded-lg bg-accent/50"
-						>
-							<div
-								class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"
-							></div>
-							<span class="text-sm text-muted-foreground"
-								>Syncing...</span
-							>
-						</div>
-					{:else if appState.syncState.error}
-						<div
-							class="flex items-center gap-2 py-2 px-2 rounded-lg bg-destructive/10"
-						>
-							<div
-								class="w-2 h-2 rounded-full bg-destructive"
-							></div>
-							<span
-								class="text-sm text-destructive {appState.syncState.error.length > 30 ? 'text-xs' : ''}"
-							>
-								{appState.syncState.error}
-							</span>
-						</div>
-					{:else if appState.syncState.lastSynced}
-						<div
-							class="flex items-center gap-2 py-2 px-2 rounded-lg"
-						>
-							<div
-								class="w-2 h-2 rounded-full bg-green-500"
-							></div>
-							<span class="text-sm text-muted-foreground">
-								Synced
-								{new Date(appState.syncState.lastSynced).toLocaleTimeString()}
-							</span>
-						</div>
-					{/if}
-				</Sidebar.GroupContent>
-			</Sidebar.Group>
-		{/if}
 	</Sidebar.Content>
 
 	<Sidebar.Footer class="p-4">
@@ -265,9 +246,27 @@
 									<div
 										class="grid flex-1 text-left text-sm leading-tight"
 									>
-										<span class="truncate font-semibold"
-											>{appState.userName || 'User'}</span
-										>
+										<div class="flex items-center gap-1.5">
+											<span class="truncate font-semibold"
+												>{appState.userName || 'User'}</span
+											>
+											{#if appState.syncState.loading}
+												<div
+													class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"
+													title="Syncing..."
+												></div>
+											{:else if appState.syncState.error}
+												<div
+													class="w-1.5 h-1.5 rounded-full bg-destructive"
+													title={appState.syncState.error}
+												></div>
+											{:else if appState.syncState.lastSynced}
+												<div
+													class="w-1.5 h-1.5 rounded-full bg-green-500"
+													title={`Synced ${new Date(appState.syncState.lastSynced).toLocaleTimeString()}`}
+												></div>
+											{/if}
+										</div>
 										<span class="truncate text-xs"
 											>{appState.userEmail}</span
 										>

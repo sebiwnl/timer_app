@@ -1,8 +1,9 @@
 export class AudioService {
 	private audioContext: AudioContext | null = null;
+	supportsVibration: boolean;
 
 	constructor() {
-		// Initialize lazily or on user interaction if needed
+		this.supportsVibration = 'vibrate' in navigator;
 	}
 
 	private getContext(): AudioContext {
