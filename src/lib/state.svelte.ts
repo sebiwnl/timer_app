@@ -212,6 +212,18 @@ class GlobalState {
         return this.user?.email || null;
     }
 
+    get currentViewTitle(): string {
+        if (this.view === 'list') return 'Timers';
+        if (this.view === 'runner') return 'Running Timer';
+        if (this.view === 'editor') {
+            const config = this.editingConfigId
+                ? this.savedConfigs.find(c => c.id === this.editingConfigId)
+                : null;
+            return config?.name || 'New Timer';
+        }
+        return '';
+    }
+
     updateConfig(newConfig: WorkoutConfig) {
         this.config = newConfig;
     }
@@ -300,7 +312,14 @@ class GlobalState {
     }
 
     createNewTimer(): void {
-        this.config = { groups: [] };
+        this.config = {
+            groups: [{
+                id: Date.now().toString(),
+                rounds: 1,
+                workSeconds: 30,
+                pauseSeconds: 10,
+            }]
+        };
         this.showEditor();
     }
 

@@ -27,20 +27,6 @@
 </script>
 
 <div class="flex flex-col gap-6 animate-in fade-in duration-500">
-	<div class="flex items-center justify-between">
-		<h1 class="text-2xl font-bold text-foreground">Timers</h1>
-	</div>
-
-	{#if appState.savedConfigs.length === 0}
-		<div class="flex flex-col items-center justify-center py-16 text-center">
-			<div class="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
-				<ClockIcon class="w-8 h-8 text-muted-foreground" />
-			</div>
-			<h3 class="text-lg font-semibold text-foreground mb-1">No timers yet</h3>
-			<p class="text-sm text-muted-foreground mb-6">Create your first workout timer to get started</p>
-		</div>
-	{/if}
-
 	<button
 		class="w-full flex justify-between items-center p-4 bg-primary hover:bg-primary/90 rounded-xl border border-primary/30 text-primary-foreground transition-all group active:scale-[0.99]"
 		onclick={handleCreateNew}
@@ -53,6 +39,16 @@
 		</div>
 		<ChevronRightIcon class="w-4 h-4 opacity-80" />
 	</button>
+
+	{#if appState.savedConfigs.length === 0}
+		<div class="flex flex-col items-center justify-center py-16 text-center">
+			<div class="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+				<ClockIcon class="w-8 h-8 text-muted-foreground" />
+			</div>
+			<h3 class="text-lg font-semibold text-foreground mb-1">No timers yet</h3>
+			<p class="text-sm text-muted-foreground mb-6">Create your first workout timer to get started</p>
+		</div>
+	{/if}
 
 	{#if appState.savedConfigs.length > 0}
 		<div class="flex flex-col gap-2">

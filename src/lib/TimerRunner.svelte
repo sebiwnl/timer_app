@@ -1,10 +1,8 @@
 <script lang="ts">
 	import { createTimerEngine } from "$lib/timer.svelte";
 	import { appState } from "$lib/state.svelte";
-	import { Button } from "$lib/components/ui/button/index.js";
 	import TimerDisplay from "$lib/TimerDisplay.svelte";
 	import Controls from "$lib/Controls.svelte";
-	import XIcon from "@lucide/svelte/icons/x";
 	import type { TimerState } from "$lib/types";
 
 	let timerEngine = $state<ReturnType<typeof createTimerEngine> | null>(null);
@@ -95,18 +93,6 @@
 </script>
 
 <div class="flex flex-col gap-6 animate-in fade-in duration-500">
-	<div class="flex items-center gap-4">
-		<Button
-			variant="ghost"
-			size="icon"
-			class="h-9 w-9"
-			onclick={handleExit}
-		>
-			<XIcon class="w-5 h-5" />
-		</Button>
-		<h1 class="text-xl font-bold text-foreground">Running Timer</h1>
-	</div>
-
 	{#if timerState.status !== "idle" && timerState.status !== "complete"}
 		<div class="flex flex-col items-center gap-8">
 			<TimerDisplay state={timerState} config={appState.config} />
