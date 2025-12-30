@@ -32,9 +32,9 @@
 
 <Sidebar.Provider>
     <AppSidebar />
-    <Sidebar.Inset>
+    <Sidebar.Inset class="overflow-hidden flex flex-col">
         <header
-            class="flex items-center h-10 px-3 sticky top-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+            class="flex items-center h-10 px-3 shrink-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
         >
             <SidebarTrigger class="-ml-1" />
 
@@ -55,7 +55,7 @@
                 </Button>
             {/if}
         </header>
-        <main class="w-full">
+        <main class="w-full flex-1 overflow-y-auto">
             {@render children()}
         </main>
     </Sidebar.Inset>

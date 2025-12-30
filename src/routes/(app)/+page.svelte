@@ -11,7 +11,7 @@
 </svelte:head>
 
 <div
-	class="min-h-[calc(100vh-2.5rem)] flex flex-col items-center justify-start sm:justify-center pt-2 sm:pt-0 px-4 sm:px-8 bg-background text-foreground"
+	class="flex flex-col items-center justify-start sm:justify-center min-h-[calc(100vh-2.5rem)] px-4 sm:px-8 bg-background text-foreground"
 >
 	<div class="w-full max-w-lg">
 		{#if appState.view === "list"}

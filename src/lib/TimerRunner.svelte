@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { createTimerEngine } from "$lib/timer.svelte";
 	import { appState } from "$lib/state.svelte";
+	import { audio } from "$lib/audio";
 	import TimerDisplay from "$lib/TimerDisplay.svelte";
 	import Controls from "$lib/Controls.svelte";
 	import type { TimerState } from "$lib/types";
@@ -24,8 +25,10 @@
 		}
 	}
 
-	function handleStart() {
+	async function handleStart() {
 		if (appState.config.groups.length === 0) return;
+
+		await audio.init();
 
 		if (timerEngine) {
 			timerEngine.reset();
