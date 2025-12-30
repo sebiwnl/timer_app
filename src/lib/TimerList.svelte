@@ -40,6 +40,11 @@
 		<ChevronRightIcon class="w-4 h-4 opacity-80" />
 	</button>
 
+	<div class="flex items-center gap-2">
+		<h2 class="text-sm text-muted-foreground whitespace-nowrap">Saved timers</h2>
+		<hr class="flex-1 border-border" />
+	</div>
+
 	{#if appState.savedConfigs.length === 0}
 		<div class="flex flex-col items-center justify-center py-16 text-center">
 			<div class="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
