@@ -21,9 +21,9 @@ export class VoiceNotificationService {
 	private voicesChangedHandler: (() => void) | null = null;
 	
 	private preferences: VoicePreferences = {
-		rate: 1.1,
+		rate: 0.9,
 		pitch: 1.0,
-		volume: 1.0
+		volume: 0.9
 	};
 
 	constructor() {
@@ -99,8 +99,13 @@ export class VoiceNotificationService {
 			if (found) return found;
 		}
 
-		const googleUS = this.voices.find(v => v.name.includes('Google US English'));
-		if (googleUS) return googleUS;
+		const systemEnglish = this.voices.find(v => 
+			v.lang.startsWith('en') && 
+			!v.name.includes('Google') && 
+			!v.name.includes('Microsoft') &&
+			!v.name.includes('Amazon')
+		);
+		if (systemEnglish) return systemEnglish;
 
 		const english = this.voices.find(v => v.lang.startsWith('en'));
 		if (english) return english;
@@ -129,9 +134,9 @@ export class VoiceNotificationService {
 		speechSynthesis.cancel();
 
 		const utterance = new SpeechSynthesisUtterance(text);
-		utterance.rate = this.preferences.rate ?? 1.1;
+		utterance.rate = this.preferences.rate ?? 0.9;
 		utterance.pitch = this.preferences.pitch ?? 1.0;
-		utterance.volume = this.preferences.volume ?? 1.0;
+		utterance.volume = this.preferences.volume ?? 0.9;
 
 		const voice = this.getBestVoice();
 		if (voice) {

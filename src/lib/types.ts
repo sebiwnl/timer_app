@@ -21,8 +21,11 @@ export interface TimerState {
 }
 
 export interface AudioSettings {
-	sound: boolean;
-	vibration: boolean;
+    voice: boolean;
+    beep: boolean;
+    vibration: boolean;
+    voiceVolume: number;
+    beepVolume: number;
 }
 
 export interface SavedConfig {

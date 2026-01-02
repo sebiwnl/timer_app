@@ -9,6 +9,7 @@
 	import { audio } from "$lib/audio";
 	import Volume2Icon from "@lucide/svelte/icons/volume-2";
 	import VolumeXIcon from "@lucide/svelte/icons/volume-x";
+	import BellIcon from "@lucide/svelte/icons/bell";
 	import VibrationIcon from "@lucide/svelte/icons/vibrate";
 	import Trash2Icon from "@lucide/svelte/icons/trash-2";
 	import TimerIcon from "@lucide/svelte/icons/timer";
@@ -143,12 +144,12 @@
 							{/snippet}
 						</Collapsible.Trigger>
 						<Collapsible.Content>
-							<Sidebar.MenuSub class="space-y-1">
+							<Sidebar.MenuSub class="space-y-3">
 								<Sidebar.MenuSubItem>
 									<div
 										class="flex items-center justify-between gap-1 pr-1"
 									>
-										{#if appState.settings.sound}
+										{#if appState.settings.voice}
 											<Volume2Icon
 												class="size-4 text-primary"
 											/>
@@ -158,16 +159,70 @@
 											/>
 										{/if}
 										<Sidebar.MenuSubButton class="flex-1">
-											Sound
+											Voice
 										</Sidebar.MenuSubButton>
 										<Switch
 											checked={
-												appState.settings.sound
+												appState.settings.voice
 											}
 											onCheckedChange={(v) =>
 												appState.updateSettings({
-													sound: v
+													voice: v
 												})}
+										/>
+									</div>
+									<div class="pl-7 pr-1 mt-1">
+										<input
+											type="range"
+											min="0"
+											max="100"
+											value={Math.round(appState.settings.voiceVolume * 100)}
+											oninput={(e) => {
+												const target = e.target as HTMLInputElement;
+												appState.updateSettings({
+													voiceVolume: parseInt(target.value) / 100
+												});
+											}}
+											class="w-full h-1 bg-muted rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
+										/>
+									</div>
+								</Sidebar.MenuSubItem>
+								<Sidebar.MenuSubItem>
+									<div
+										class="flex items-center justify-between gap-1 pr-1"
+									>
+										<BellIcon
+											class="size-4 {appState.settings
+												.beep
+												? 'text-primary'
+												: 'text-muted-foreground'}"
+										/>
+										<Sidebar.MenuSubButton class="flex-1">
+											Beep
+										</Sidebar.MenuSubButton>
+										<Switch
+											checked={
+												appState.settings.beep
+											}
+											onCheckedChange={(v) =>
+												appState.updateSettings({
+													beep: v
+												})}
+										/>
+									</div>
+									<div class="pl-7 pr-1 mt-1">
+										<input
+											type="range"
+											min="0"
+											max="100"
+											value={Math.round(appState.settings.beepVolume * 100)}
+											oninput={(e) => {
+												const target = e.target as HTMLInputElement;
+												appState.updateSettings({
+													beepVolume: parseInt(target.value) / 100
+												});
+											}}
+											class="w-full h-1 bg-muted rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary"
 										/>
 									</div>
 								</Sidebar.MenuSubItem>

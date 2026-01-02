@@ -1,4 +1,4 @@
-import { loadConfigs, saveConfig as persistConfig, deleteConfig as persistDelete } from './persistence';
+import { loadConfigs, saveConfig as persistConfig, deleteConfig as persistDelete, saveSettings, loadSettings } from './persistence';
 import type { WorkoutConfig, AudioSettings, SavedConfig } from './types';
 import { supabase } from './supabaseClient';
 import type { User, AuthError as SupabaseAuthError } from '@supabase/supabase-js';
@@ -20,8 +20,11 @@ class GlobalState {
     });
 
     settings = $state<AudioSettings>({
-        sound: true,
-        vibration: false
+        voice: true,
+        beep: true,
+        vibration: false,
+        voiceVolume: 1.0,
+        beepVolume: 0.2
     });
 
     savedConfigs = $state<SavedConfig[]>(loadConfigs());
@@ -230,6 +233,23 @@ class GlobalState {
 
     updateSettings(newSettings: Partial<AudioSettings>) {
         this.settings = { ...this.settings, ...newSettings };
+        saveSettings(this.settings);
+    }
+
+    loadSettingsWithMigration() {
+        const loaded = loadSettings();
+        if (loaded) {
+            this.settings = loaded;
+        } else {
+            const defaultSettings: AudioSettings = {
+                voice: true,
+                beep: true,
+                vibration: false,
+                voiceVolume: 1.0,
+                beepVolume: 0.2
+            };
+            this.settings = defaultSettings;
+        }
     }
 
     async saveCurrentConfig(name: string) {
@@ -334,3 +354,4 @@ class GlobalState {
 }
 
 export const appState = new GlobalState();
+appState.loadSettingsWithMigration();

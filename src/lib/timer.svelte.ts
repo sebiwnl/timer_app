@@ -4,6 +4,7 @@ import { voice } from './VoiceNotification.svelte';
 
 const COUNTDOWN_DURATION = 5;
 const WARNING_SECONDS = 5;
+const BEEP_COUNTDOWN_START = 2;
 const RAF_UPDATE_INTERVAL = 1000 / 60;
 
 interface TimelineItem {
@@ -57,6 +58,8 @@ export function createTimerEngine(cfg: WorkoutConfig, settings: AudioSettings): 
 	let lastTime = 0;
 	let raf: number | null = null;
 	let warnedForCurrent = false;
+	let warnedForBeep2 = false;
+	let warnedForBeep1 = false;
 	let pausedPrevStatus: TimerState['status'] = 'idle';
 	let settingsRef: AudioSettings = settings;
 	let hiddenTimestamp: number | null = null;
@@ -67,6 +70,8 @@ export function createTimerEngine(cfg: WorkoutConfig, settings: AudioSettings): 
 		state.remainingSeconds = item.duration;
 		state.status = item.type === 'countdown' ? 'countdown' : item.type === 'work' ? 'work' : 'pause';
 		warnedForCurrent = false;
+		warnedForBeep2 = false;
+		warnedForBeep1 = false;
 	}
 
 	function tick(now: number) {
@@ -80,7 +85,7 @@ export function createTimerEngine(cfg: WorkoutConfig, settings: AudioSettings): 
 		if (!warnedForCurrent && state.remainingSeconds <= WARNING_SECONDS && state.remainingSeconds > 0) {
 			warnedForCurrent = true;
 			const next = timeline[idx + 1];
-			if (settingsRef.sound) {
+			if (settingsRef.voice) {
 				if (state.status === 'work' && next && next.type === 'pause') {
 					voice.speakAtCountdown('pause', WARNING_SECONDS);
 				} else if ((state.status === 'pause' || state.status === 'countdown') && next && next.type === 'work') {
@@ -90,18 +95,43 @@ export function createTimerEngine(cfg: WorkoutConfig, settings: AudioSettings): 
 			if (settingsRef.vibration) audio.vibrate([50, 40]);
 		}
 
+		const next = timeline[idx + 1];
+		const isTransitioningToWork = next && next.type === 'work';
+
+		if (isTransitioningToWork) {
+			if (!warnedForBeep2 && state.remainingSeconds <= BEEP_COUNTDOWN_START && state.remainingSeconds > BEEP_COUNTDOWN_START - 1) {
+				warnedForBeep2 = true;
+				if (settingsRef.beep) {
+					audio.playBeep(660, 0.08, 'sine', settingsRef.beepVolume);
+				}
+				if (settingsRef.vibration) audio.vibrate([30, 30]);
+			}
+
+			if (!warnedForBeep1 && state.remainingSeconds <= BEEP_COUNTDOWN_START - 1 && state.remainingSeconds > 0) {
+				warnedForBeep1 = true;
+				if (settingsRef.beep) {
+					audio.playBeep(660, 0.08, 'sine', settingsRef.beepVolume);
+				}
+				if (settingsRef.vibration) audio.vibrate([30, 30]);
+			}
+		}
+
 		if (state.remainingSeconds <= 0) {
 			idx += 1;
 			if (idx >= timeline.length) {
 				state.status = 'complete';
 				state.remainingSeconds = 0;
-				if (settingsRef.sound) voice.speak('Workout complete');
+				if (settingsRef.voice) voice.speak('Workout complete');
 				if (settingsRef.vibration) audio.vibrate([200, 100, 200]);
 				cancelLoop();
 				return;
 			}
 
-			if (settingsRef.sound) audio.playBeep();
+			if (isTransitioningToWork && settingsRef.beep) {
+				audio.playBeep(880, 0.15, 'sine', settingsRef.beepVolume);
+			} else {
+				audio.playBeep(880, 0.1, 'sine', settingsRef.beepVolume);
+			}
 			if (settingsRef.vibration) audio.vibrate(80);
 
 			setStateFromItem(timeline[idx]);
@@ -132,7 +162,7 @@ export function createTimerEngine(cfg: WorkoutConfig, settings: AudioSettings): 
 		lastTime = 0;
 		warnedForCurrent = false;
 		hiddenTimestamp = null;
-		if (settingsRef.sound) voice.speak('Starting workout');
+		if (settingsRef.voice) voice.speak('Starting workout');
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 		raf = requestAnimationFrame(tick);
 	}
@@ -177,6 +207,8 @@ export function createTimerEngine(cfg: WorkoutConfig, settings: AudioSettings): 
 		state.totalElapsed = 0;
 		lastTime = 0;
 		warnedForCurrent = false;
+		warnedForBeep2 = false;
+		warnedForBeep1 = false;
 		pausedPrevStatus = 'idle';
 		state.prevStatus = undefined;
 	}
